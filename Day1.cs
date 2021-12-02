@@ -6,7 +6,7 @@ namespace Advent2021
     [TestFixture]
     public class Day1
     {
-        const string _inputFile = @"Inputs\Day1.txt";
+        const string _inputFilename = @"Inputs\Day1.txt";
         const string _testData = @"199
 200
 208
@@ -29,7 +29,9 @@ namespace Advent2021
         [Test]
         public void Silver()
         {
-            var inputs = FileHelpers.EnumerateLines(_inputFile).Select(i => Convert.ToInt64(i)).ToArray();
+            FileHelpers.CheckInputs(_inputFilename);
+
+            var inputs = FileHelpers.EnumerateLines(_inputFilename).Select(i => Convert.ToInt64(i)).ToArray();
 
             Assert.AreEqual(1655, Run(1, inputs));
         }
@@ -45,7 +47,9 @@ namespace Advent2021
         [Test]
         public void Gold()
         {
-            var inputs = FileHelpers.EnumerateLines(_inputFile).Select(i => Convert.ToInt64(i)).ToArray();
+            FileHelpers.CheckInputs(_inputFilename);
+
+            var inputs = FileHelpers.EnumerateLines(_inputFilename).Select(i => Convert.ToInt64(i)).ToArray();
 
             Assert.AreEqual(1683, Run(3, inputs));
         }
