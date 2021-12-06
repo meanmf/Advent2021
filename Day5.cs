@@ -44,7 +44,7 @@ namespace Advent2021
         {
             FileHelpers.CheckInputs(_inputFilename);
 
-            Assert.AreEqual(0, Run(FileHelpers.EnumerateLines(_inputFilename), true));
+            Assert.AreEqual(19929, Run(FileHelpers.EnumerateLines(_inputFilename), true));
         }
 
         int Run(IEnumerable<string> inputs, bool diagonals = false)
