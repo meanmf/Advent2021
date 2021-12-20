@@ -155,14 +155,14 @@ namespace Advent2021
         }
 
         [Test]
-        public void Solve()
+        public static void Solve()
         {
             FileHelpers.CheckInputs(_inputFilename);
 
             Assert.AreEqual((372, 12241), Run(FileHelpers.EnumerateLines(_inputFilename)));
         }
 
-        static readonly List<Func<(int X, int Y, int Z), (int X, int Y, int Z)>> Rotate = new()
+        static readonly List<Func<(int X, int Y, int Z), (int X, int Y, int Z)>> Rotations = new()
         {
             p => p,
             p => (p.X, -p.Z, p.Y),
@@ -224,7 +224,7 @@ namespace Advent2021
                     var s1 = scanners[j];
                     if (s1.Oriented) continue;
 
-                    foreach (var r in Rotate)
+                    foreach (var r in Rotations)
                     {
                         var s1Rotated = s1.Rotate(r);
 
@@ -233,52 +233,44 @@ namespace Advent2021
                         for (int a = 0; a < s0.Points.Count; a++)
                         {
                             if (isMatch) break;
-                            var s0Translated = Translate(s0.Points, s0.Points[a]);
+                            var s0Translated = s0.Translate(s0.Points[a]);
                             for (int b = 0; b < s1Rotated.Count; b++)
                             {
-                                var s1Translated = Translate(s1Rotated, s1Rotated[b]);
                                 int matchCount = 0;
-                                foreach (var p in s1Translated)
+                                foreach (var p in s1Rotated.Select(pt => Scanner.Translate(pt, s1Rotated[b])))
                                 {
-                                    if (s0Translated.Contains(p))
-                                    {
-                                        matchCount++;
-                                    }
-                                }
+                                    if (!s0Translated.Contains(p)) continue;
+                                    if (++matchCount < 12) continue;
 
-                                if (matchCount >= 12)
-                                {
                                     foundCount++;
-                                    Console.WriteLine(
-                                        $"Match {j} ({matchCount}) ({s1Rotated[b].X},{s1Rotated[b].Y},{s1Rotated[b].Z})");
                                     isMatch = true;
 
                                     var mergedPoints = new HashSet<(int x, int y, int z)>();
-                                    foreach (var p in s0.Points)
+                                    foreach (var mp in s0.Points)
                                     {
-                                        mergedPoints.Add((p.X, p.Y, p.Z));
+                                        mergedPoints.Add(mp);
                                     }
 
                                     scanners[j].Oriented = true;
                                     scanners[j].Location = (s0.Points[a].X - s1Rotated[b].X,
                                         s0.Points[a].Y - s1Rotated[b].Y,
                                         s0.Points[a].Z - s1Rotated[b].Z);
+
+                                    Console.WriteLine($"Scanner {j} @ {scanners[j].Location}");
+
                                     var newPoints = scanners[j].Rotate(r);
 
-                                    foreach (var p in newPoints)
+                                    foreach (var np in newPoints)
                                     {
-                                        mergedPoints.Add((p.X + scanners[j].Location.X,
-                                            p.Y + scanners[j].Location.Y,
-                                            p.Z + scanners[j].Location.Z));
+                                        mergedPoints.Add((np.X + scanners[j].Location.X,
+                                            np.Y + scanners[j].Location.Y,
+                                            np.Z + scanners[j].Location.Z));
                                     }
 
-                                    Console.WriteLine(
-                                        $"Scanner {j} @ ({scanners[j].Location.X},{scanners[j].Location.Y},{scanners[j].Location.Z})");
-
                                     scanners[0].Points.Clear();
-                                    foreach (var p in mergedPoints)
+                                    foreach (var mp in mergedPoints)
                                     {
-                                        scanners[0].AddPoint(p.x, p.y, p.z);
+                                        scanners[0].Points.Add(mp);
                                     }
 
                                     break;
@@ -309,17 +301,6 @@ namespace Advent2021
             return (scanners[0].Points.Count, manhattan);
         }
 
-        static HashSet<(int x, int y, int z)> Translate(IList<(int X, int Y, int Z)> points, (int X, int Y, int Z) basePoint)
-        {
-            var outPoints = new HashSet<(int, int, int)>();
-            foreach (var point in points)
-            {
-                outPoints.Add((point.X - basePoint.X, point.Y - basePoint.Y, point.Z - basePoint.Z));
-            }
-
-            return outPoints;
-        }
-
         class Scanner
         {
             public readonly List<(int X, int Y, int Z)> Points = new();
@@ -334,6 +315,22 @@ namespace Advent2021
             public List<(int X, int Y, int Z)> Rotate(Func<(int X, int Y, int Z), (int X, int Y, int Z)> rotateFunc)
             {
                 return Points.Select(rotateFunc).ToList();
+            }
+
+            public HashSet<(int x, int y, int z)> Translate((int X, int Y, int Z) basePoint)
+            {
+                var outPoints = new HashSet<(int, int, int)>();
+                foreach (var point in Points)
+                {
+                    outPoints.Add(Translate(point, basePoint));
+                }
+
+                return outPoints;
+            }
+
+            public static (int x, int y, int z) Translate((int x, int y, int z) point, (int x, int y, int z) basePoint)
+            {
+                return (point.x - basePoint.x, point.y - basePoint.y, point.z - basePoint.z);
             }
         }
     }
